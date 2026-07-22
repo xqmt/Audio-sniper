@@ -82,9 +82,6 @@ if not gui.Parent then
     gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- ==========================================
--- [ปรับแก้] ปุ่มเปิด-ปิด GUI (Toggle Button)
--- ==========================================
 local toggleGuiBtn = Instance.new("ImageButton")
 toggleGuiBtn.Name = "ToggleGuiButton"
 toggleGuiBtn.Parent = gui
@@ -105,9 +102,6 @@ toggleBtnStroke.Thickness = 1.5
 toggleBtnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 toggleBtnStroke.Parent = toggleGuiBtn
 
--- ==========================================
--- Main Frame & Title Configuration
--- ==========================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "Main"
 mainFrame.Parent = gui
@@ -140,7 +134,6 @@ mainStroke.Thickness = 1
 mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 mainStroke.Parent = mainFrame
 
--- Container สำหรับจัดวาง Icon และ Title ให้สวยงาม
 local titleContainer = Instance.new("Frame")
 titleContainer.Name = "TitleContainer"
 titleContainer.Parent = mainFrame
@@ -148,7 +141,6 @@ titleContainer.Position = UDim2.new(0, 15, 0, 0)
 titleContainer.Size = UDim2.new(1, -85, 0, 45)
 titleContainer.BackgroundTransparency = 1
 
--- ไอคอนรูปภาพหน้าชื่อ GUI (ดึงจาก Asset ID 15286660621)
 local titleIcon = Instance.new("ImageLabel")
 titleIcon.Name = "TitleIcon"
 titleIcon.Parent = titleContainer
@@ -162,7 +154,6 @@ local titleIconCorner = Instance.new("UICorner")
 titleIconCorner.CornerRadius = UDim.new(0, 6)
 titleIconCorner.Parent = titleIcon
 
--- ข้อความสำรองกรณีรูปภาพตรงหน้าชื่อไม่โหลด
 local titleFallback = Instance.new("TextLabel")
 titleFallback.Name = "TitleFallback"
 titleFallback.Parent = titleContainer
@@ -174,7 +165,7 @@ titleFallback.TextSize = 16
 titleFallback.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleFallback.ZIndex = 1
 
--- ข้อความชื่อ GUI
+
 local title = Instance.new("TextLabel")
 title.Name = "Title"
 title.Parent = titleContainer
@@ -182,12 +173,10 @@ title.Position = UDim2.new(0, 32, 0, 0)
 title.Size = UDim2.new(1, -32, 1, 0)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamMedium
-title.Text = "Audio Detector"
+title.Text = "Audio Sniper"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 15
 title.TextXAlignment = Enum.TextXAlignment.Left
-
--- ==========================================
 
 local toggleNotifBtn = Instance.new("TextButton")
 toggleNotifBtn.Name = "ToggleNotif"
