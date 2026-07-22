@@ -20,15 +20,21 @@ local function getAssetInfo(soundId)
         return MarketplaceService:GetProductInfo(tonumber(soundId), Enum.InfoType.Asset)
     end)
     if success and result then
+        local createdYear = "Unknown"
+        if result.Created then
+            createdYear = string.sub(result.Created, 1, 4)
+        end
+
         local info = {
             Name = result.Name or "Unknown Title",
             Creator = (result.Creator and result.Creator.Name) or "Unknown Creator",
-            CreatorTargetId = result.Creator and result.Creator.CreatorTargetId or 0
+            CreatorTargetId = result.Creator and result.Creator.CreatorTargetId or 0,
+            CreatedYear = createdYear
         }
         cache[soundId] = info
         return info
     end
-    return { Name = "Unknown Audio", Creator = "Unknown Creator", CreatorTargetId = 0 }
+    return { Name = "Unknown Audio", Creator = "Unknown Creator", CreatorTargetId = 0, CreatedYear = "Unknown" }
 end
 
 local function isRobloxAsset(soundId)
@@ -72,7 +78,6 @@ local function formatTime(seconds)
     local secs = math.floor(seconds % 60)
     return string.format("%d:%02d", mins, secs)
 end
-
 
 local function makeSmoothDraggable(frame)
     local dragging = false
@@ -128,7 +133,7 @@ toggleGuiBtn.Name = "ToggleGuiButton"
 toggleGuiBtn.Parent = gui
 toggleGuiBtn.Position = UDim2.new(0, 15, 0, 15)
 toggleGuiBtn.Size = UDim2.new(0, 45, 0, 45)
-toggleGuiBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+toggleGuiBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 toggleGuiBtn.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=15286660621&width=420&height=420&format=png"
 toggleGuiBtn.Active = true
 toggleGuiBtn.Draggable = false
@@ -139,7 +144,7 @@ toggleBtnCorner.CornerRadius = UDim.new(0, 10)
 toggleBtnCorner.Parent = toggleGuiBtn
 
 local toggleBtnStroke = Instance.new("UIStroke")
-toggleBtnStroke.Color = Color3.fromRGB(50, 50, 60)
+toggleBtnStroke.Color = Color3.fromRGB(14, 14, 14)
 toggleBtnStroke.Thickness = 1.5
 toggleBtnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 toggleBtnStroke.Parent = toggleGuiBtn
@@ -147,9 +152,9 @@ toggleBtnStroke.Parent = toggleGuiBtn
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "Main"
 mainFrame.Parent = gui
-mainFrame.Size = UDim2.new(0, 420, 0, 520)
+mainFrame.Size = UDim2.new(0, 480, 0, 520)
 mainFrame.Position = UDim2.new(0.35, 0, 0.2, 0)
-mainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Draggable = false
@@ -172,7 +177,7 @@ mainCorner.CornerRadius = UDim.new(0, 12)
 mainCorner.Parent = mainFrame
 
 local mainStroke = Instance.new("UIStroke")
-mainStroke.Color = Color3.fromRGB(40, 40, 45)
+mainStroke.Color = Color3.fromRGB(14, 14, 14)
 mainStroke.Thickness = 1
 mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 mainStroke.Parent = mainFrame
@@ -225,7 +230,7 @@ toggleNotifBtn.Name = "ToggleNotif"
 toggleNotifBtn.Parent = mainFrame
 toggleNotifBtn.Position = UDim2.new(1, -55, 0, 12)
 toggleNotifBtn.Size = UDim2.new(0, 38, 0, 20)
-toggleNotifBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+toggleNotifBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 toggleNotifBtn.Text = ""
 toggleNotifBtn.AutoButtonColor = false
 
@@ -234,7 +239,7 @@ trackCorner.CornerRadius = UDim.new(1, 0)
 trackCorner.Parent = toggleNotifBtn
 
 local trackStroke = Instance.new("UIStroke")
-trackStroke.Color = Color3.fromRGB(46, 204, 113)
+trackStroke.Color = Color3.fromRGB(14, 14, 14)
 trackStroke.Thickness = 1.2
 trackStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 trackStroke.Parent = toggleNotifBtn
@@ -256,7 +261,7 @@ searchFrame.Name = "SearchContainer"
 searchFrame.Parent = mainFrame
 searchFrame.Position = UDim2.new(0, 15, 0, 45)
 searchFrame.Size = UDim2.new(1, -30, 0, 36)
-searchFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
+searchFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 searchFrame.BorderSizePixel = 0
 
 local searchCorner = Instance.new("UICorner")
@@ -264,7 +269,7 @@ searchCorner.CornerRadius = UDim.new(0, 8)
 searchCorner.Parent = searchFrame
 
 local searchStroke = Instance.new("UIStroke")
-searchStroke.Color = Color3.fromRGB(45, 45, 50)
+searchStroke.Color = Color3.fromRGB(14, 14, 14)
 searchStroke.Thickness = 1
 searchStroke.Parent = searchFrame
 
@@ -288,7 +293,7 @@ notifBanner.Name = "Banner"
 notifBanner.Parent = mainFrame
 notifBanner.Position = UDim2.new(0.5, -110, 0, 85)
 notifBanner.Size = UDim2.new(0, 220, 0, 30)
-notifBanner.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+notifBanner.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 notifBanner.Font = Enum.Font.GothamMedium
 notifBanner.Text = "New id detected: -"
 notifBanner.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -303,7 +308,7 @@ notifCorner.CornerRadius = UDim.new(1, 0)
 notifCorner.Parent = notifBanner
 
 local notifStroke = Instance.new("UIStroke")
-notifStroke.Color = Color3.fromRGB(80, 80, 100)
+notifStroke.Color = Color3.fromRGB(14, 14, 14)
 notifStroke.Thickness = 1
 notifStroke.Transparency = 1
 notifStroke.Parent = notifBanner
@@ -353,10 +358,10 @@ toggleNotifBtn.MouseButton1Click:Connect(function()
             BackgroundColor3 = Color3.fromRGB(46, 204, 113)
         }):Play()
         TweenService:Create(toggleNotifBtn, tInfo, {
-            BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+            BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         }):Play()
         TweenService:Create(trackStroke, tInfo, {
-            Color = Color3.fromRGB(46, 204, 113)
+            Color = Color3.fromRGB(14, 14, 14)
         }):Play()
     else
         TweenService:Create(toggleKnob, tInfo, {
@@ -364,10 +369,10 @@ toggleNotifBtn.MouseButton1Click:Connect(function()
             BackgroundColor3 = Color3.fromRGB(231, 76, 60)
         }):Play()
         TweenService:Create(toggleNotifBtn, tInfo, {
-            BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+            BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         }):Play()
         TweenService:Create(trackStroke, tInfo, {
-            Color = Color3.fromRGB(231, 76, 60)
+            Color = Color3.fromRGB(14, 14, 14)
         }):Play()
         
         hideNotification()
@@ -453,7 +458,8 @@ local function createOrUpdateSongCard(player, soundId)
             return
         end
 
-        local timeString = os.date("%H:%M:%S")
+        local info = getAssetInfo(soundId)
+        local timeString = os.date("%H:%M")
         local playerName = player and player.DisplayName or "System / World"
         local username = player and ("@" .. player.Name) or ""
         local userId = player and player.UserId or 0
@@ -462,7 +468,7 @@ local function createOrUpdateSongCard(player, soundId)
         card.Name = key
         card.Parent = scroll
         card.Size = UDim2.new(1, 0, 0, 58)
-        card.BackgroundColor3 = Color3.fromRGB(25, 25, 29)
+        card.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         card.BorderSizePixel = 0
         card.ClipsDescendants = true
         card.LayoutOrder = -os.time()
@@ -472,7 +478,7 @@ local function createOrUpdateSongCard(player, soundId)
         cardCorner.Parent = card
 
         local cardStroke = Instance.new("UIStroke")
-        cardStroke.Color = Color3.fromRGB(35, 35, 40)
+        cardStroke.Color = Color3.fromRGB(14, 14, 14)
         cardStroke.Thickness = 1
         cardStroke.Parent = card
 
@@ -483,17 +489,17 @@ local function createOrUpdateSongCard(player, soundId)
         topFrame.BackgroundTransparency = 1
 
         card.MouseEnter:Connect(function()
-            TweenService:Create(card, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(32, 32, 38)}):Play()
+            TweenService:Create(card, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(15, 15, 15)}):Play()
         end)
         card.MouseLeave:Connect(function()
-            TweenService:Create(card, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 29)}):Play()
+            TweenService:Create(card, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 0, 0)}):Play()
         end)
 
         local avatar = Instance.new("ImageLabel")
         avatar.Parent = topFrame
         avatar.Position = UDim2.new(0, 10, 0.5, -18)
         avatar.Size = UDim2.new(0, 36, 0, 36)
-        avatar.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+        avatar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         avatar.Image = userId > 0 and ("rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=150&h=150") or "rbxassetid://0"
 
         local avatarCorner = Instance.new("UICorner")
@@ -534,7 +540,7 @@ local function createOrUpdateSongCard(player, soundId)
         divider.Parent = extraPanel
         divider.Position = UDim2.new(0, 12, 0, 0)
         divider.Size = UDim2.new(1, -24, 0, 1)
-        divider.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+        divider.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
         divider.BorderSizePixel = 0
 
         local creatorLabel = Instance.new("TextLabel")
@@ -554,13 +560,18 @@ local function createOrUpdateSongCard(player, soundId)
         sliderBg.Parent = extraPanel
         sliderBg.Position = UDim2.new(0, 12, 0, 28)
         sliderBg.Size = UDim2.new(1, -24, 0, 6)
-        sliderBg.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
+        sliderBg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         sliderBg.AutoButtonColor = false
         sliderBg.Text = ""
 
         local sliderBgCorner = Instance.new("UICorner")
         sliderBgCorner.CornerRadius = UDim.new(1, 0)
         sliderBgCorner.Parent = sliderBg
+
+        local sliderBgStroke = Instance.new("UIStroke")
+        sliderBgStroke.Color = Color3.fromRGB(14, 14, 14)
+        sliderBgStroke.Thickness = 1
+        sliderBgStroke.Parent = sliderBg
 
         local sliderFill = Instance.new("Frame")
         sliderFill.Parent = sliderBg
@@ -587,7 +598,7 @@ local function createOrUpdateSongCard(player, soundId)
         previewBtn.Parent = topFrame
         previewBtn.Position = UDim2.new(1, -135, 0.5, -13)
         previewBtn.Size = UDim2.new(0, 60, 0, 26)
-        previewBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        previewBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         previewBtn.Font = Enum.Font.GothamMedium
         previewBtn.Text = "Preview"
         previewBtn.TextColor3 = Color3.fromRGB(200, 200, 255)
@@ -597,6 +608,11 @@ local function createOrUpdateSongCard(player, soundId)
         local previewCorner = Instance.new("UICorner")
         previewCorner.CornerRadius = UDim.new(0, 6)
         previewCorner.Parent = previewBtn
+
+        local previewStroke = Instance.new("UIStroke")
+        previewStroke.Color = Color3.fromRGB(14, 14, 14)
+        previewStroke.Thickness = 1
+        previewStroke.Parent = previewBtn
 
         local cardData = {}
 
@@ -608,7 +624,7 @@ local function createOrUpdateSongCard(player, soundId)
             end
             if activePreviewBtn then
                 activePreviewBtn.Text = "Preview"
-                activePreviewBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                activePreviewBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
                 activePreviewBtn.TextColor3 = Color3.fromRGB(200, 200, 255)
             end
             if activeCardData and activeCardData.Card then
@@ -645,9 +661,8 @@ local function createOrUpdateSongCard(player, soundId)
                 }):Play()
 
                 task.spawn(function()
-                    local info = getAssetInfo(soundId)
                     if activePreviewSound == sound then
-                        creatorLabel.Text = "By: " .. info.Creator .. "  (" .. info.Name .. ")"
+                        creatorLabel.Text = "By: " .. info.Creator .. "  (" .. info.Name .. ")  •  create: " .. info.CreatedYear
                     end
                 end)
 
@@ -658,7 +673,6 @@ local function createOrUpdateSongCard(player, soundId)
                 end)
             end
         end)
-
 
         local isDragging = false
         local function updateSeek(input)
@@ -713,7 +727,7 @@ local function createOrUpdateSongCard(player, soundId)
         copyBtn.Parent = topFrame
         copyBtn.Position = UDim2.new(1, -70, 0.5, -13)
         copyBtn.Size = UDim2.new(0, 60, 0, 26)
-        copyBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
+        copyBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         copyBtn.Font = Enum.Font.GothamMedium
         copyBtn.Text = "Copy"
         copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -723,6 +737,11 @@ local function createOrUpdateSongCard(player, soundId)
         local btnCorner = Instance.new("UICorner")
         btnCorner.CornerRadius = UDim.new(0, 6)
         btnCorner.Parent = copyBtn
+
+        local copyStroke = Instance.new("UIStroke")
+        copyStroke.Color = Color3.fromRGB(14, 14, 14)
+        copyStroke.Thickness = 1
+        copyStroke.Parent = copyBtn
 
         copyBtn.MouseButton1Click:Connect(function()
             if not confirmState[copyBtn] then
@@ -734,7 +753,7 @@ local function createOrUpdateSongCard(player, soundId)
                 if confirmState[copyBtn] then
                     confirmState[copyBtn] = nil
                     copyBtn.Text = "Copy"
-                    copyBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
+                    copyBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
                 end
             else
                 confirmState[copyBtn] = nil
@@ -744,7 +763,7 @@ local function createOrUpdateSongCard(player, soundId)
 
                 task.wait(1.5)
                 copyBtn.Text = "Copy"
-                copyBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
+                copyBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
             end
         end)
 
@@ -776,21 +795,31 @@ searchBox:GetPropertyChangedSignal("Text"):Connect(function()
     end
 end)
 
-task.spawn(function()
-    while task.wait(0.5) do
-        for _, sound in pairs(workspace:GetDescendants()) do
-            if sound:IsA("Sound") and sound.IsPlaying then
-                local soundID = sound.SoundId:match("%d+")
-                
-                if soundID and not IGNORED_IDS[soundID] then
-                    local player = getPlayerFromSound(sound)
-                    local key = (player and player.UserId or "unknown") .. "_" .. soundID
+local function checkAndAddSound(sound)
+    if not sound:IsA("Sound") then return end
+    
+    local function evaluate()
+        if sound.IsPlaying then
+            local soundID = sound.SoundId:match("%d+")
+            if soundID and not IGNORED_IDS[soundID] then
+                local player = getPlayerFromSound(sound)
+                local key = (player and player.UserId or "unknown") .. "_" .. soundID
 
-                    if not activeSongs[key] and not pendingCheck[key] then
-                        createOrUpdateSongCard(player, soundID)
-                    end
+                if not activeSongs[key] and not pendingCheck[key] then
+                    createOrUpdateSongCard(player, soundID)
                 end
             end
         end
     end
-end)
+
+    evaluate()
+
+    sound:GetPropertyChangedSignal("IsPlaying"):Connect(evaluate)
+    sound:GetPropertyChangedSignal("SoundId"):Connect(evaluate)
+end
+
+for _, object in pairs(workspace:GetDescendants()) do
+    checkAndAddSound(object)
+end
+
+workspace.DescendantAdded:Connect(checkAndAddSound)
