@@ -1,0 +1,759 @@
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local UserInputService = game:GetService("UserInputService")
+local ContentProvider = game:GetService("ContentProvider")
+
+local IGNORED_IDS = {
+    ["3"] = true,
+}
+
+local notifyEnabled = true
+local cache = {}
+local playableCache = {}
+
+local function getAssetInfo(soundId)
+    if cache[soundId] then return cache[soundId] end
+    local success, result = pcall(function()
+        return MarketplaceService:GetProductInfo(tonumber(soundId), Enum.InfoType.Asset)
+    end)
+    if success and result then
+        local info = {
+            Name = result.Name or "Unknown Title",
+            Creator = (result.Creator and result.Creator.Name) or "Unknown Creator",
+            CreatorTargetId = result.Creator and result.Creator.CreatorTargetId or 0
+        }
+        cache[soundId] = info
+        return info
+    end
+    return { Name = "Unknown Audio", Creator = "Unknown Creator", CreatorTargetId = 0 }
+end
+
+local function isRobloxAsset(soundId)
+    local info = getAssetInfo(soundId)
+    local creatorName = string.lower(info.Creator or "")
+    if creatorName == "roblox" or info.CreatorTargetId == 1 then
+        return true
+    end
+    return false
+end
+
+local function isSoundPlayable(soundId)
+    if playableCache[soundId] ~= nil then 
+        return playableCache[soundId] 
+    end
+
+    local tempSound = Instance.new("Sound")
+    tempSound.SoundId = "rbxassetid://" .. soundId
+    tempSound.Volume = 0
+    tempSound.Parent = SoundService
+
+    local isLoaded = false
+    local success = pcall(function()
+        ContentProvider:PreloadAsync({tempSound})
+    end)
+
+    if success and tempSound.TimeLength > 0 then
+        isLoaded = true
+    else
+        isLoaded = false
+    end
+
+    tempSound:Destroy()
+    playableCache[soundId] = isLoaded
+    return isLoaded
+end
+
+local function formatTime(seconds)
+    if not seconds or seconds ~= seconds then return "0:00" end
+    local mins = math.floor(seconds / 60)
+    local secs = math.floor(seconds % 60)
+    return string.format("%d:%02d", mins, secs)
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "Audio Sniper"
+gui.ResetOnSpawn = false
+
+pcall(function() gui.Parent = CoreGui end)
+if not gui.Parent then
+    gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- ==========================================
+-- [ปรับแก้] ปุ่มเปิด-ปิด GUI (Toggle Button)
+-- ==========================================
+local toggleGuiBtn = Instance.new("ImageButton")
+toggleGuiBtn.Name = "ToggleGuiButton"
+toggleGuiBtn.Parent = gui
+toggleGuiBtn.Position = UDim2.new(0, 15, 0, 15)
+toggleGuiBtn.Size = UDim2.new(0, 45, 0, 45)
+toggleGuiBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+toggleGuiBtn.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=15286660621&width=420&height=420&format=png"
+toggleGuiBtn.Active = true
+toggleGuiBtn.Draggable = true
+
+local toggleBtnCorner = Instance.new("UICorner")
+toggleBtnCorner.CornerRadius = UDim.new(0, 10)
+toggleBtnCorner.Parent = toggleGuiBtn
+
+local toggleBtnStroke = Instance.new("UIStroke")
+toggleBtnStroke.Color = Color3.fromRGB(50, 50, 60)
+toggleBtnStroke.Thickness = 1.5
+toggleBtnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+toggleBtnStroke.Parent = toggleGuiBtn
+
+-- ==========================================
+-- Main Frame & Title Configuration
+-- ==========================================
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "Main"
+mainFrame.Parent = gui
+mainFrame.Size = UDim2.new(0, 420, 0, 520)
+mainFrame.Position = UDim2.new(0.35, 0, 0.2, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+toggleGuiBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+    
+    TweenService:Create(toggleGuiBtn, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 40, 0, 40)
+    }):Play()
+    task.wait(0.1)
+    TweenService:Create(toggleGuiBtn, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 45, 0, 45)
+    }):Play()
+end)
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(40, 40, 45)
+mainStroke.Thickness = 1
+mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+mainStroke.Parent = mainFrame
+
+-- Container สำหรับจัดวาง Icon และ Title ให้สวยงาม
+local titleContainer = Instance.new("Frame")
+titleContainer.Name = "TitleContainer"
+titleContainer.Parent = mainFrame
+titleContainer.Position = UDim2.new(0, 15, 0, 0)
+titleContainer.Size = UDim2.new(1, -85, 0, 45)
+titleContainer.BackgroundTransparency = 1
+
+-- ไอคอนรูปภาพหน้าชื่อ GUI (ดึงจาก Asset ID 15286660621)
+local titleIcon = Instance.new("ImageLabel")
+titleIcon.Name = "TitleIcon"
+titleIcon.Parent = titleContainer
+titleIcon.Position = UDim2.new(0, 0, 0.5, -12)
+titleIcon.Size = UDim2.new(0, 24, 0, 24)
+titleIcon.BackgroundTransparency = 1
+titleIcon.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=15286660621&width=420&height=420&format=png"
+titleIcon.ZIndex = 2
+
+local titleIconCorner = Instance.new("UICorner")
+titleIconCorner.CornerRadius = UDim.new(0, 6)
+titleIconCorner.Parent = titleIcon
+
+-- ข้อความสำรองกรณีรูปภาพตรงหน้าชื่อไม่โหลด
+local titleFallback = Instance.new("TextLabel")
+titleFallback.Name = "TitleFallback"
+titleFallback.Parent = titleContainer
+titleFallback.Position = UDim2.new(0, 0, 0.5, -12)
+titleFallback.Size = UDim2.new(0, 24, 0, 24)
+titleFallback.BackgroundTransparency = 1
+titleFallback.Text = ""
+titleFallback.TextSize = 16
+titleFallback.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleFallback.ZIndex = 1
+
+-- ข้อความชื่อ GUI
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Parent = titleContainer
+title.Position = UDim2.new(0, 32, 0, 0)
+title.Size = UDim2.new(1, -32, 1, 0)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamMedium
+title.Text = "Audio Detector"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 15
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- ==========================================
+
+local toggleNotifBtn = Instance.new("TextButton")
+toggleNotifBtn.Name = "ToggleNotif"
+toggleNotifBtn.Parent = mainFrame
+toggleNotifBtn.Position = UDim2.new(1, -55, 0, 12)
+toggleNotifBtn.Size = UDim2.new(0, 38, 0, 20)
+toggleNotifBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+toggleNotifBtn.Text = ""
+toggleNotifBtn.AutoButtonColor = false
+
+local trackCorner = Instance.new("UICorner")
+trackCorner.CornerRadius = UDim.new(1, 0)
+trackCorner.Parent = toggleNotifBtn
+
+local trackStroke = Instance.new("UIStroke")
+trackStroke.Color = Color3.fromRGB(46, 204, 113)
+trackStroke.Thickness = 1.2
+trackStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+trackStroke.Parent = toggleNotifBtn
+
+local toggleKnob = Instance.new("Frame")
+toggleKnob.Name = "Knob"
+toggleKnob.Parent = toggleNotifBtn
+toggleKnob.Position = UDim2.new(1, -17, 0.5, -7)
+toggleKnob.Size = UDim2.new(0, 14, 0, 14)
+toggleKnob.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+toggleKnob.BorderSizePixel = 0
+
+local knobCorner = Instance.new("UICorner")
+knobCorner.CornerRadius = UDim.new(1, 0)
+knobCorner.Parent = toggleKnob
+
+local searchFrame = Instance.new("Frame")
+searchFrame.Name = "SearchContainer"
+searchFrame.Parent = mainFrame
+searchFrame.Position = UDim2.new(0, 15, 0, 45)
+searchFrame.Size = UDim2.new(1, -30, 0, 36)
+searchFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
+searchFrame.BorderSizePixel = 0
+
+local searchCorner = Instance.new("UICorner")
+searchCorner.CornerRadius = UDim.new(0, 8)
+searchCorner.Parent = searchFrame
+
+local searchStroke = Instance.new("UIStroke")
+searchStroke.Color = Color3.fromRGB(45, 45, 50)
+searchStroke.Thickness = 1
+searchStroke.Parent = searchFrame
+
+local searchBox = Instance.new("TextBox")
+searchBox.Name = "SearchBox"
+searchBox.Parent = searchFrame
+searchBox.Size = UDim2.new(1, -20, 1, 0)
+searchBox.Position = UDim2.new(0, 10, 0, 0)
+searchBox.BackgroundTransparency = 1
+searchBox.Font = Enum.Font.Gotham
+searchBox.PlaceholderText = "Search username..."
+searchBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 130)
+searchBox.Text = ""
+searchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+searchBox.TextSize = 12
+searchBox.TextXAlignment = Enum.TextXAlignment.Left
+searchBox.ClearTextOnFocus = false
+
+local notifBanner = Instance.new("TextButton")
+notifBanner.Name = "Banner"
+notifBanner.Parent = mainFrame
+notifBanner.Position = UDim2.new(0.5, -110, 0, 85)
+notifBanner.Size = UDim2.new(0, 220, 0, 30)
+notifBanner.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+notifBanner.Font = Enum.Font.GothamMedium
+notifBanner.Text = "New id detected: -"
+notifBanner.TextColor3 = Color3.fromRGB(255, 255, 255)
+notifBanner.TextSize = 11
+notifBanner.Visible = false
+notifBanner.BackgroundTransparency = 1
+notifBanner.TextTransparency = 1
+notifBanner.ZIndex = 10
+
+local notifCorner = Instance.new("UICorner")
+notifCorner.CornerRadius = UDim.new(1, 0)
+notifCorner.Parent = notifBanner
+
+local notifStroke = Instance.new("UIStroke")
+notifStroke.Color = Color3.fromRGB(80, 80, 100)
+notifStroke.Thickness = 1
+notifStroke.Transparency = 1
+notifStroke.Parent = notifBanner
+
+local isNotifShowing = false
+local function showNotification(soundId)
+    if not notifyEnabled then return end
+    notifBanner.Text = "New id detected: " .. soundId
+    if isNotifShowing then return end
+    isNotifShowing = true
+    notifBanner.Visible = true
+
+    TweenService:Create(notifBanner, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, -110, 0, 95),
+        BackgroundTransparency = 0,
+        TextTransparency = 0
+    }):Play()
+    TweenService:Create(notifStroke, TweenInfo.new(0.3), {Transparency = 0}):Play()
+end
+
+local function hideNotification()
+    if not isNotifShowing then return end
+    isNotifShowing = false
+
+    local tween = TweenService:Create(notifBanner, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Position = UDim2.new(0.5, -110, 0, 85),
+        BackgroundTransparency = 1,
+        TextTransparency = 1
+    })
+    TweenService:Create(notifStroke, TweenInfo.new(0.2), {Transparency = 1}):Play()
+    
+    tween:Play()
+    tween.Completed:Connect(function()
+        if not isNotifShowing then
+            notifBanner.Visible = false
+        end
+    end)
+end
+
+toggleNotifBtn.MouseButton1Click:Connect(function()
+    notifyEnabled = not notifyEnabled
+    local tInfo = TweenInfo.new(0.25, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out)
+    
+    if notifyEnabled then
+        TweenService:Create(toggleKnob, tInfo, {
+            Position = UDim2.new(1, -17, 0.5, -7),
+            BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+        }):Play()
+        TweenService:Create(toggleNotifBtn, tInfo, {
+            BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+        }):Play()
+        TweenService:Create(trackStroke, tInfo, {
+            Color = Color3.fromRGB(46, 204, 113)
+        }):Play()
+    else
+        TweenService:Create(toggleKnob, tInfo, {
+            Position = UDim2.new(0, 3, 0.5, -7),
+            BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+        }):Play()
+        TweenService:Create(toggleNotifBtn, tInfo, {
+            BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        }):Play()
+        TweenService:Create(trackStroke, tInfo, {
+            Color = Color3.fromRGB(231, 76, 60)
+        }):Play()
+        
+        hideNotification()
+    end
+end)
+
+local scroll = Instance.new("ScrollingFrame")
+scroll.Name = "SongList"
+scroll.Parent = mainFrame
+scroll.Position = UDim2.new(0, 15, 0, 90)
+scroll.Size = UDim2.new(1, -30, 1, -105)
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+scroll.ScrollBarThickness = 2
+scroll.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 90)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+local layout = Instance.new("UIListLayout")
+layout.Parent = scroll
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0, 8)
+
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+end)
+
+local activeSongs = {}
+local pendingCheck = {}
+local confirmState = {}
+local activePreviewSound = nil
+local activePreviewBtn = nil
+local activeCardData = nil
+
+local function smoothScrollToTop()
+    local startPos = scroll.CanvasPosition
+    local tInfo = TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out)
+    local val = Instance.new("NumberValue")
+    val.Value = startPos.Y
+    
+    val:GetPropertyChangedSignal("Value"):Connect(function()
+        scroll.CanvasPosition = Vector2.new(0, val.Value)
+    end)
+    
+    local tween = TweenService:Create(val, tInfo, {Value = 0})
+    tween:Play()
+    tween.Completed:Connect(function()
+        val:Destroy()
+    end)
+end
+
+notifBanner.MouseButton1Click:Connect(function()
+    smoothScrollToTop()
+    hideNotification()
+end)
+
+scroll:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+    if scroll.CanvasPosition.Y <= 20 then
+        hideNotification()
+    end
+end)
+
+local function getPlayerFromSound(sound)
+    local model = sound:FindFirstAncestorOfClass("Model")
+    if model then
+        return Players:GetPlayerFromCharacter(model)
+    end
+    return nil
+end
+
+local function createOrUpdateSongCard(player, soundId)
+    local key = (player and player.UserId or "unknown") .. "_" .. soundId
+    if activeSongs[key] or pendingCheck[key] then return end
+    pendingCheck[key] = true
+
+    task.spawn(function()
+        if isRobloxAsset(soundId) then
+            pendingCheck[key] = nil
+            return
+        end
+
+        if not isSoundPlayable(soundId) then
+            pendingCheck[key] = nil
+            return
+        end
+
+        local timeString = os.date("%H:%M:%S")
+        local playerName = player and player.DisplayName or "System / World"
+        local username = player and ("@" .. player.Name) or ""
+        local userId = player and player.UserId or 0
+
+        local card = Instance.new("Frame")
+        card.Name = key
+        card.Parent = scroll
+        card.Size = UDim2.new(1, 0, 0, 58)
+        card.BackgroundColor3 = Color3.fromRGB(25, 25, 29)
+        card.BorderSizePixel = 0
+        card.ClipsDescendants = true
+        card.LayoutOrder = -os.time()
+
+        local cardCorner = Instance.new("UICorner")
+        cardCorner.CornerRadius = UDim.new(0, 8)
+        cardCorner.Parent = card
+
+        local cardStroke = Instance.new("UIStroke")
+        cardStroke.Color = Color3.fromRGB(35, 35, 40)
+        cardStroke.Thickness = 1
+        cardStroke.Parent = card
+
+        local topFrame = Instance.new("Frame")
+        topFrame.Name = "Top"
+        topFrame.Parent = card
+        topFrame.Size = UDim2.new(1, 0, 0, 58)
+        topFrame.BackgroundTransparency = 1
+
+        card.MouseEnter:Connect(function()
+            TweenService:Create(card, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(32, 32, 38)}):Play()
+        end)
+        card.MouseLeave:Connect(function()
+            TweenService:Create(card, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 29)}):Play()
+        end)
+
+        local avatar = Instance.new("ImageLabel")
+        avatar.Parent = topFrame
+        avatar.Position = UDim2.new(0, 10, 0.5, -18)
+        avatar.Size = UDim2.new(0, 36, 0, 36)
+        avatar.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+        avatar.Image = userId > 0 and ("rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=150&h=150") or "rbxassetid://0"
+
+        local avatarCorner = Instance.new("UICorner")
+        avatarCorner.CornerRadius = UDim.new(1, 0)
+        avatarCorner.Parent = avatar
+
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Parent = topFrame
+        nameLabel.Position = UDim2.new(0, 56, 0, 10)
+        nameLabel.Size = UDim2.new(1, -210, 0, 18)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.Font = Enum.Font.GothamMedium
+        nameLabel.Text = playerName
+        nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        nameLabel.TextSize = 13
+        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+        nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+
+        local infoLabel = Instance.new("TextLabel")
+        infoLabel.Parent = topFrame
+        infoLabel.Position = UDim2.new(0, 56, 0, 28)
+        infoLabel.Size = UDim2.new(1, -210, 0, 18)
+        infoLabel.BackgroundTransparency = 1
+        infoLabel.Font = Enum.Font.Gotham
+        infoLabel.Text = "ID: " .. soundId .. "  •  " .. timeString
+        infoLabel.TextColor3 = Color3.fromRGB(160, 160, 170)
+        infoLabel.TextSize = 11
+        infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+        local extraPanel = Instance.new("Frame")
+        extraPanel.Name = "Extra"
+        extraPanel.Parent = card
+        extraPanel.Position = UDim2.new(0, 0, 0, 58)
+        extraPanel.Size = UDim2.new(1, 0, 0, 57)
+        extraPanel.BackgroundTransparency = 1
+
+        local divider = Instance.new("Frame")
+        divider.Parent = extraPanel
+        divider.Position = UDim2.new(0, 12, 0, 0)
+        divider.Size = UDim2.new(1, -24, 0, 1)
+        divider.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+        divider.BorderSizePixel = 0
+
+        local creatorLabel = Instance.new("TextLabel")
+        creatorLabel.Parent = extraPanel
+        creatorLabel.Position = UDim2.new(0, 12, 0, 6)
+        creatorLabel.Size = UDim2.new(1, -24, 0, 16)
+        creatorLabel.BackgroundTransparency = 1
+        creatorLabel.Font = Enum.Font.Gotham
+        creatorLabel.Text = "Creator: Loading..."
+        creatorLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+        creatorLabel.TextSize = 11
+        creatorLabel.TextXAlignment = Enum.TextXAlignment.Left
+        creatorLabel.TextTruncate = Enum.TextTruncate.AtEnd
+
+        local sliderBg = Instance.new("TextButton")
+        sliderBg.Name = "SliderBg"
+        sliderBg.Parent = extraPanel
+        sliderBg.Position = UDim2.new(0, 12, 0, 28)
+        sliderBg.Size = UDim2.new(1, -24, 0, 6)
+        sliderBg.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
+        sliderBg.AutoButtonColor = false
+        sliderBg.Text = ""
+
+        local sliderBgCorner = Instance.new("UICorner")
+        sliderBgCorner.CornerRadius = UDim.new(1, 0)
+        sliderBgCorner.Parent = sliderBg
+
+        local sliderFill = Instance.new("Frame")
+        sliderFill.Parent = sliderBg
+        sliderFill.Size = UDim2.new(0, 0, 1, 0)
+        sliderFill.BackgroundColor3 = Color3.fromRGB(100, 140, 255)
+        sliderFill.BorderSizePixel = 0
+
+        local fillCorner = Instance.new("UICorner")
+        fillCorner.CornerRadius = UDim.new(1, 0)
+        fillCorner.Parent = sliderFill
+
+        local durationLabel = Instance.new("TextLabel")
+        durationLabel.Parent = extraPanel
+        durationLabel.Position = UDim2.new(0, 12, 0, 37)
+        durationLabel.Size = UDim2.new(1, -24, 0, 14)
+        durationLabel.BackgroundTransparency = 1
+        durationLabel.Font = Enum.Font.Gotham
+        durationLabel.Text = "0:00 / 0:00"
+        durationLabel.TextColor3 = Color3.fromRGB(130, 130, 140)
+        durationLabel.TextSize = 10
+        durationLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+        local previewBtn = Instance.new("TextButton")
+        previewBtn.Parent = topFrame
+        previewBtn.Position = UDim2.new(1, -135, 0.5, -13)
+        previewBtn.Size = UDim2.new(0, 60, 0, 26)
+        previewBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        previewBtn.Font = Enum.Font.GothamMedium
+        previewBtn.Text = "Preview"
+        previewBtn.TextColor3 = Color3.fromRGB(200, 200, 255)
+        previewBtn.TextSize = 10
+        previewBtn.AutoButtonColor = false
+
+        local previewCorner = Instance.new("UICorner")
+        previewCorner.CornerRadius = UDim.new(0, 6)
+        previewCorner.Parent = previewBtn
+
+        local cardData = {}
+
+        local function stopCurrentPreview()
+            if activePreviewSound then
+                activePreviewSound:Stop()
+                activePreviewSound:Destroy()
+                activePreviewSound = nil
+            end
+            if activePreviewBtn then
+                activePreviewBtn.Text = "Preview"
+                activePreviewBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                activePreviewBtn.TextColor3 = Color3.fromRGB(200, 200, 255)
+            end
+            if activeCardData and activeCardData.Card then
+                TweenService:Create(activeCardData.Card, TweenInfo.new(0.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(1, 0, 0, 58)
+                }):Play()
+            end
+            activePreviewBtn = nil
+            activeCardData = nil
+        end
+
+        previewBtn.MouseButton1Click:Connect(function()
+            if activePreviewBtn == previewBtn then
+                stopCurrentPreview()
+            else
+                stopCurrentPreview()
+
+                local sound = Instance.new("Sound")
+                sound.SoundId = "rbxassetid://" .. soundId
+                sound.Volume = 1
+                sound.Parent = SoundService
+                sound:Play()
+
+                activePreviewSound = sound
+                activePreviewBtn = previewBtn
+                activeCardData = cardData
+
+                previewBtn.Text = "Stop"
+                previewBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
+                previewBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+                TweenService:Create(card, TweenInfo.new(0.35, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(1, 0, 0, 115)
+                }):Play()
+
+                task.spawn(function()
+                    local info = getAssetInfo(soundId)
+                    if activePreviewSound == sound then
+                        creatorLabel.Text = "By: " .. info.Creator .. "  (" .. info.Name .. ")"
+                    end
+                end)
+
+                sound.Ended:Connect(function()
+                    if activePreviewBtn == previewBtn then
+                        stopCurrentPreview()
+                    end
+                end)
+            end
+        end)
+
+        local isDragging = false
+        local function updateSeek(input)
+            if not activePreviewSound or activePreviewSound ~= activePreviewSound then return end
+            local posX = math.clamp(input.Position.X - sliderBg.AbsolutePosition.X, 0, sliderBg.AbsoluteSize.X)
+            local percentage = posX / sliderBg.AbsoluteSize.X
+            if activePreviewSound.TimeLength > 0 then
+                activePreviewSound.TimePosition = percentage * activePreviewSound.TimeLength
+            end
+        end
+
+        sliderBg.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                isDragging = true
+                updateSeek(input)
+            end
+        end)
+
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                isDragging = false
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                updateSeek(input)
+            end
+        end)
+
+        task.spawn(function()
+            while card.Parent do
+                task.wait(0.1)
+                if activePreviewSound and activePreviewBtn == previewBtn then
+                    local length = activePreviewSound.TimeLength
+                    local pos = activePreviewSound.TimePosition
+                    if length > 0 then
+                        local progress = math.clamp(pos / length, 0, 1)
+                        sliderFill.Size = UDim2.new(progress, 0, 1, 0)
+                        durationLabel.Text = formatTime(pos) .. " / " .. formatTime(length)
+                    end
+                end
+            end
+        end)
+
+        local copyBtn = Instance.new("TextButton")
+        copyBtn.Parent = topFrame
+        copyBtn.Position = UDim2.new(1, -70, 0.5, -13)
+        copyBtn.Size = UDim2.new(0, 60, 0, 26)
+        copyBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
+        copyBtn.Font = Enum.Font.GothamMedium
+        copyBtn.Text = "Copy"
+        copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        copyBtn.TextSize = 10
+        copyBtn.AutoButtonColor = false
+
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 6)
+        btnCorner.Parent = copyBtn
+
+        copyBtn.MouseButton1Click:Connect(function()
+            if not confirmState[copyBtn] then
+                confirmState[copyBtn] = true
+                copyBtn.Text = "Sure?"
+                copyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+
+                task.wait(2)
+                if confirmState[copyBtn] then
+                    confirmState[copyBtn] = nil
+                    copyBtn.Text = "Copy"
+                    copyBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
+                end
+            else
+                confirmState[copyBtn] = nil
+                setclipboard(soundId)
+                copyBtn.Text = "Copied"
+                copyBtn.BackgroundColor3 = Color3.fromRGB(50, 90, 60)
+
+                task.wait(1.5)
+                copyBtn.Text = "Copy"
+                copyBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
+            end
+        end)
+
+        local filterText = string.lower(searchBox.Text)
+        if filterText ~= "" and not string.find(string.lower(playerName), filterText) and not string.find(string.lower(username), filterText) then
+            card.Visible = false
+        end
+
+        cardData = { Card = card, PlayerName = string.lower(playerName), Username = string.lower(username) }
+        activeSongs[key] = cardData
+        pendingCheck[key] = nil
+
+        if scroll.CanvasPosition.Y > 20 then
+            showNotification(soundId)
+        end
+    end)
+end
+
+searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local searchText = string.lower(searchBox.Text)
+    for _, data in pairs(activeSongs) do
+        if data.Card then
+            if searchText == "" or string.find(data.PlayerName, searchText) or string.find(data.Username, searchText) then
+                data.Card.Visible = true
+            else
+                data.Card.Visible = false
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        for _, sound in pairs(workspace:GetDescendants()) do
+            if sound:IsA("Sound") and sound.IsPlaying then
+                local soundID = sound.SoundId:match("%d+")
+                
+                if soundID and not IGNORED_IDS[soundID] then
+                    local player = getPlayerFromSound(sound)
+                    local key = (player and player.UserId or "unknown") .. "_" .. soundID
+
+                    if not activeSongs[key] and not pendingCheck[key] then
+                        createOrUpdateSongCard(player, soundID)
+                    end
+                end
+            end
+        end
+    end
+end)
