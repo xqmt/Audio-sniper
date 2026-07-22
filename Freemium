@@ -73,6 +73,47 @@ local function formatTime(seconds)
     return string.format("%d:%02d", mins, secs)
 end
 
+
+local function makeSmoothDraggable(frame)
+    local dragging = false
+    local dragInput, dragStart, startPos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            local targetPos = UDim2.new(
+                startPos.X.Scale, 
+                startPos.X.Offset + delta.X, 
+                startPos.Y.Scale, 
+                startPos.Y.Offset + delta.Y
+            )
+            TweenService:Create(frame, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Position = targetPos
+            }):Play()
+        end
+    end)
+end
+
 local gui = Instance.new("ScreenGui")
 gui.Name = "Audio Sniper"
 gui.ResetOnSpawn = false
@@ -90,7 +131,8 @@ toggleGuiBtn.Size = UDim2.new(0, 45, 0, 45)
 toggleGuiBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 toggleGuiBtn.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=15286660621&width=420&height=420&format=png"
 toggleGuiBtn.Active = true
-toggleGuiBtn.Draggable = true
+toggleGuiBtn.Draggable = false
+makeSmoothDraggable(toggleGuiBtn)
 
 local toggleBtnCorner = Instance.new("UICorner")
 toggleBtnCorner.CornerRadius = UDim.new(0, 10)
@@ -110,7 +152,8 @@ mainFrame.Position = UDim2.new(0.35, 0, 0.2, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
-mainFrame.Draggable = true
+mainFrame.Draggable = false
+makeSmoothDraggable(mainFrame)
 
 toggleGuiBtn.MouseButton1Click:Connect(function()
     mainFrame.Visible = not mainFrame.Visible
@@ -164,7 +207,6 @@ titleFallback.Text = ""
 titleFallback.TextSize = 16
 titleFallback.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleFallback.ZIndex = 1
-
 
 local title = Instance.new("TextLabel")
 title.Name = "Title"
@@ -617,6 +659,7 @@ local function createOrUpdateSongCard(player, soundId)
             end
         end)
 
+
         local isDragging = false
         local function updateSeek(input)
             if not activePreviewSound or activePreviewSound ~= activePreviewSound then return end
@@ -624,6 +667,9 @@ local function createOrUpdateSongCard(player, soundId)
             local percentage = posX / sliderBg.AbsoluteSize.X
             if activePreviewSound.TimeLength > 0 then
                 activePreviewSound.TimePosition = percentage * activePreviewSound.TimeLength
+                TweenService:Create(sliderFill, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(percentage, 0, 1, 0)
+                }):Play()
             end
         end
 
@@ -649,12 +695,14 @@ local function createOrUpdateSongCard(player, soundId)
         task.spawn(function()
             while card.Parent do
                 task.wait(0.1)
-                if activePreviewSound and activePreviewBtn == previewBtn then
+                if activePreviewSound and activePreviewBtn == previewBtn and not isDragging then
                     local length = activePreviewSound.TimeLength
                     local pos = activePreviewSound.TimePosition
                     if length > 0 then
                         local progress = math.clamp(pos / length, 0, 1)
-                        sliderFill.Size = UDim2.new(progress, 0, 1, 0)
+                        TweenService:Create(sliderFill, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+                            Size = UDim2.new(progress, 0, 1, 0)
+                        }):Play()
                         durationLabel.Text = formatTime(pos) .. " / " .. formatTime(length)
                     end
                 end
