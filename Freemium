@@ -219,7 +219,7 @@ title.Parent = titleContainer
 title.Position = UDim2.new(0, 32, 0, 0)
 title.Size = UDim2.new(1, -32, 1, 0)
 title.BackgroundTransparency = 1
-title.Font = Enum.Font.GothamMedium
+title.Font = Enum.Font.Cartoon
 title.Text = "Audio Sniper"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 15
@@ -279,7 +279,7 @@ searchBox.Parent = searchFrame
 searchBox.Size = UDim2.new(1, -20, 1, 0)
 searchBox.Position = UDim2.new(0, 10, 0, 0)
 searchBox.BackgroundTransparency = 1
-searchBox.Font = Enum.Font.Gotham
+searchBox.Font = Enum.Font.Cartoon
 searchBox.PlaceholderText = "Search username..."
 searchBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 130)
 searchBox.Text = ""
@@ -294,7 +294,7 @@ notifBanner.Parent = mainFrame
 notifBanner.Position = UDim2.new(0.5, -110, 0, 85)
 notifBanner.Size = UDim2.new(0, 220, 0, 30)
 notifBanner.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-notifBanner.Font = Enum.Font.GothamMedium
+notifBanner.Font = Enum.Font.Cartoon
 notifBanner.Text = "New id detected: -"
 notifBanner.TextColor3 = Color3.fromRGB(255, 255, 255)
 notifBanner.TextSize = 11
@@ -511,7 +511,7 @@ local function createOrUpdateSongCard(player, soundId)
         nameLabel.Position = UDim2.new(0, 56, 0, 10)
         nameLabel.Size = UDim2.new(1, -210, 0, 18)
         nameLabel.BackgroundTransparency = 1
-        nameLabel.Font = Enum.Font.GothamMedium
+        nameLabel.Font = Enum.Font.Cartoon
         nameLabel.Text = playerName
         nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         nameLabel.TextSize = 13
@@ -523,7 +523,7 @@ local function createOrUpdateSongCard(player, soundId)
         infoLabel.Position = UDim2.new(0, 56, 0, 28)
         infoLabel.Size = UDim2.new(1, -210, 0, 18)
         infoLabel.BackgroundTransparency = 1
-        infoLabel.Font = Enum.Font.Gotham
+        infoLabel.Font = Enum.Font.Cartoon
         infoLabel.Text = "ID: " .. soundId .. "  •  " .. timeString
         infoLabel.TextColor3 = Color3.fromRGB(160, 160, 170)
         infoLabel.TextSize = 11
@@ -548,7 +548,7 @@ local function createOrUpdateSongCard(player, soundId)
         creatorLabel.Position = UDim2.new(0, 12, 0, 6)
         creatorLabel.Size = UDim2.new(1, -24, 0, 16)
         creatorLabel.BackgroundTransparency = 1
-        creatorLabel.Font = Enum.Font.Gotham
+        creatorLabel.Font = Enum.Font.Cartoon
         creatorLabel.Text = "Creator: Loading..."
         creatorLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
         creatorLabel.TextSize = 11
@@ -588,20 +588,21 @@ local function createOrUpdateSongCard(player, soundId)
         durationLabel.Position = UDim2.new(0, 12, 0, 37)
         durationLabel.Size = UDim2.new(1, -24, 0, 14)
         durationLabel.BackgroundTransparency = 1
-        durationLabel.Font = Enum.Font.Gotham
+        durationLabel.Font = Enum.Font.Cartoon
         durationLabel.Text = "0:00 / 0:00"
         durationLabel.TextColor3 = Color3.fromRGB(130, 130, 140)
         durationLabel.TextSize = 10
         durationLabel.TextXAlignment = Enum.TextXAlignment.Right
 
+        -- ================= PREVIEW BUTTON =================
         local previewBtn = Instance.new("TextButton")
         previewBtn.Parent = topFrame
         previewBtn.Position = UDim2.new(1, -135, 0.5, -13)
         previewBtn.Size = UDim2.new(0, 60, 0, 26)
         previewBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        previewBtn.Font = Enum.Font.GothamMedium
+        previewBtn.Font = Enum.Font.Cartoon
         previewBtn.Text = "Preview"
-        previewBtn.TextColor3 = Color3.fromRGB(200, 200, 255)
+        previewBtn.TextColor3 = Color3.fromRGB(200, 220, 255)
         previewBtn.TextSize = 10
         previewBtn.AutoButtonColor = false
 
@@ -610,9 +611,24 @@ local function createOrUpdateSongCard(player, soundId)
         previewCorner.Parent = previewBtn
 
         local previewStroke = Instance.new("UIStroke")
-        previewStroke.Color = Color3.fromRGB(14, 14, 14)
-        previewStroke.Thickness = 1
+        previewStroke.Thickness = 1.5
+        previewStroke.Transparency = 0.2
+        previewStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         previewStroke.Parent = previewBtn
+
+        local previewGrad = Instance.new("UIGradient")
+        previewGrad.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 210, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 100, 255))
+        })
+        previewGrad.Parent = previewStroke
+
+        previewBtn.MouseEnter:Connect(function()
+            TweenService:Create(previewStroke, TweenInfo.new(0.2), {Thickness = 2.2, Transparency = 0}):Play()
+        end)
+        previewBtn.MouseLeave:Connect(function()
+            TweenService:Create(previewStroke, TweenInfo.new(0.2), {Thickness = 1.5, Transparency = 0.2}):Play()
+        end)
 
         local cardData = {}
 
@@ -625,7 +641,18 @@ local function createOrUpdateSongCard(player, soundId)
             if activePreviewBtn then
                 activePreviewBtn.Text = "Preview"
                 activePreviewBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-                activePreviewBtn.TextColor3 = Color3.fromRGB(200, 200, 255)
+                activePreviewBtn.TextColor3 = Color3.fromRGB(200, 220, 255)
+                
+                local currentStroke = activePreviewBtn:FindFirstChildOfClass("UIStroke")
+                if currentStroke then
+                    local grad = currentStroke:FindFirstChildOfClass("UIGradient")
+                    if grad then
+                        grad.Color = ColorSequence.new({
+                            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 210, 255)),
+                            ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 100, 255))
+                        })
+                    end
+                end
             end
             if activeCardData and activeCardData.Card then
                 TweenService:Create(activeCardData.Card, TweenInfo.new(0.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
@@ -653,8 +680,13 @@ local function createOrUpdateSongCard(player, soundId)
                 activeCardData = cardData
 
                 previewBtn.Text = "Stop"
-                previewBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
-                previewBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                previewBtn.BackgroundColor3 = Color3.fromRGB(25, 0, 0)
+                previewBtn.TextColor3 = Color3.fromRGB(255, 200, 200)
+
+                previewGrad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 60, 60)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 120, 0))
+                })
 
                 TweenService:Create(card, TweenInfo.new(0.35, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
                     Size = UDim2.new(1, 0, 0, 115)
@@ -723,14 +755,15 @@ local function createOrUpdateSongCard(player, soundId)
             end
         end)
 
+        
         local copyBtn = Instance.new("TextButton")
         copyBtn.Parent = topFrame
         copyBtn.Position = UDim2.new(1, -70, 0.5, -13)
         copyBtn.Size = UDim2.new(0, 60, 0, 26)
         copyBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        copyBtn.Font = Enum.Font.GothamMedium
+        copyBtn.Font = Enum.Font.Cartoon
         copyBtn.Text = "Copy"
-        copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        copyBtn.TextColor3 = Color3.fromRGB(240, 220, 255)
         copyBtn.TextSize = 10
         copyBtn.AutoButtonColor = false
 
@@ -739,31 +772,65 @@ local function createOrUpdateSongCard(player, soundId)
         btnCorner.Parent = copyBtn
 
         local copyStroke = Instance.new("UIStroke")
-        copyStroke.Color = Color3.fromRGB(14, 14, 14)
-        copyStroke.Thickness = 1
+        copyStroke.Thickness = 1.5
+        copyStroke.Transparency = 0.2
+        copyStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         copyStroke.Parent = copyBtn
+
+        local copyGrad = Instance.new("UIGradient")
+        copyGrad.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 90, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 200))
+        })
+        copyGrad.Parent = copyStroke
+
+        copyBtn.MouseEnter:Connect(function()
+            TweenService:Create(copyStroke, TweenInfo.new(0.2), {Thickness = 2.2, Transparency = 0}):Play()
+        end)
+        copyBtn.MouseLeave:Connect(function()
+            TweenService:Create(copyStroke, TweenInfo.new(0.2), {Thickness = 1.5, Transparency = 0.2}):Play()
+        end)
+
+        local function resetCopyGlow()
+            copyGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 90, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 200))
+            })
+        end
 
         copyBtn.MouseButton1Click:Connect(function()
             if not confirmState[copyBtn] then
                 confirmState[copyBtn] = true
                 copyBtn.Text = "Sure?"
-                copyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+                copyBtn.BackgroundColor3 = Color3.fromRGB(25, 20, 0)
+
+                copyGrad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 190, 0)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 120, 0))
+                })
 
                 task.wait(2)
                 if confirmState[copyBtn] then
                     confirmState[copyBtn] = nil
                     copyBtn.Text = "Copy"
                     copyBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                    resetCopyGlow()
                 end
             else
                 confirmState[copyBtn] = nil
                 setclipboard(soundId)
                 copyBtn.Text = "Copied"
-                copyBtn.BackgroundColor3 = Color3.fromRGB(50, 90, 60)
+                copyBtn.BackgroundColor3 = Color3.fromRGB(0, 25, 10)
+
+                copyGrad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(46, 204, 113)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 180))
+                })
 
                 task.wait(1.5)
                 copyBtn.Text = "Copy"
                 copyBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                resetCopyGlow()
             end
         end)
 
