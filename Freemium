@@ -1,3 +1,5 @@
+-- [[ Credit @afraze
+
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
@@ -18,9 +20,6 @@ if not gui.Parent then
     gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- ================================================================================
--- LOADING SCREEN (DARK BLACK BG + ROTATING GRADATION ICON + TEXT ANIMATION)
--- ================================================================================
 local loadingOverlay = Instance.new("Frame")
 loadingOverlay.Name = "LoadingOverlay"
 loadingOverlay.Size = UDim2.new(1, 0, 1, 0)
@@ -31,7 +30,6 @@ loadingOverlay.BorderSizePixel = 0
 loadingOverlay.ZIndex = 999999
 loadingOverlay.Parent = gui
 
--- Container หลักสำหรับจัดวาง Icon และ Text ให้ตรงกลาง
 local centerContainer = Instance.new("Frame")
 centerContainer.Name = "CenterContainer"
 centerContainer.Size = UDim2.new(0, 600, 0, 200)
@@ -48,7 +46,6 @@ centerLayout.SortOrder = Enum.SortOrder.LayoutOrder
 centerLayout.Padding = UDim.new(0, 15)
 centerLayout.Parent = centerContainer
 
--- Rotating Icon
 local loadingIcon = Instance.new("ImageLabel")
 loadingIcon.Name = "LoadingIcon"
 loadingIcon.Size = UDim2.new(0, 100, 0, 100)
@@ -59,13 +56,12 @@ loadingIcon.ZIndex = 1000001
 loadingIcon.LayoutOrder = 1
 loadingIcon.Parent = centerContainer
 
--- UI Gradient (ดำ-แดง ไล่สีแนวนอน) สำหรับ Icon
 local iconGradient = Instance.new("UIGradient")
 iconGradient.Rotation = 0 -- แนวนอน
 iconGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),     -- สีดำ
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 0, 0)), -- สีแดง
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))      -- สีดำ
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),     
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 0, 0)), 
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))      
 })
 iconGradient.Parent = loadingIcon
 
@@ -115,7 +111,6 @@ for i = 1, #titleText do
     table.insert(letterLabels, letterLabel)
 end
 
--- สคริปต์สั่งให้ Icon หมุนตลอดเวลา
 local rotationConnection
 rotationConnection = RunService.RenderStepped:Connect(function(delta)
     if loadingIcon and loadingIcon.Parent then
@@ -139,7 +134,7 @@ for index, label in ipairs(letterLabels) do
     task.wait(0.1)
 end
 
-task.wait(2.5) -- หน่วงเวลาอ่านข้อความ
+task.wait(2.5) 
 
 -- Fade out Icon, Letters และ Overlay
 TweenService:Create(loadingIcon, TweenInfo.new(0.8), {ImageTransparency = 1}):Play()
@@ -156,9 +151,6 @@ task.wait(1.0)
 if rotationConnection then rotationConnection:Disconnect() end
 loadingOverlay:Destroy()
 
--- ================================================================================
--- MAIN SCRIPT LOGIC
--- ================================================================================
 
 local IGNORED_IDS = {
     ["3"] = true,
@@ -574,7 +566,7 @@ local function createOrUpdateSongCard(player, soundId)
         local sliderFill = Instance.new("Frame")
         sliderFill.Parent = sliderBg
         sliderFill.Size = UDim2.new(0, 0, 1, 0)
-        sliderFill.BackgroundColor3 = Color3.fromRGB(100, 140, 255)
+        sliderFill.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
         sliderFill.BorderSizePixel = 0
 
         local fillCorner = Instance.new("UICorner")
