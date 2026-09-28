@@ -44,8 +44,8 @@ loadingOverlay.Parent = gui
 
 local centerContainer = Instance.new("Frame")
 centerContainer.Name = "CenterContainer"
-centerContainer.Size = UDim2.new(0, 600, 0, 200)
-centerContainer.Position = UDim2.new(0.5, -300, 0.5, -100)
+centerContainer.Size = UDim2.new(0, 600, 0, 240)
+centerContainer.Position = UDim2.new(0.5, -300, 0.5, -120)
 centerContainer.BackgroundTransparency = 1
 centerContainer.ZIndex = 1000000
 centerContainer.Parent = loadingOverlay
@@ -55,7 +55,7 @@ centerLayout.FillDirection = Enum.FillDirection.Vertical
 centerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 centerLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 centerLayout.SortOrder = Enum.SortOrder.LayoutOrder
-centerLayout.Padding = UDim.new(0, 15)
+centerLayout.Padding = UDim.new(0, 10)
 centerLayout.Parent = centerContainer
 
 local loadingIcon = Instance.new("ImageLabel")
@@ -122,6 +122,20 @@ for i = 1, #titleText do
     table.insert(letterLabels, letterLabel)
 end
 
+-- เพิ่ม Credit Label ใน Loading Screen
+local creditLabel = Instance.new("TextLabel")
+creditLabel.Name = "CreditLabel"
+creditLabel.Size = UDim2.new(1, 0, 0, 20)
+creditLabel.BackgroundTransparency = 1
+creditLabel.Text = "Credit to @afraze"
+creditLabel.Font = Enum.Font.SourceSansBold
+creditLabel.TextSize = 14
+creditLabel.TextColor3 = Color3.fromRGB(150, 150, 160)
+creditLabel.TextTransparency = 1
+creditLabel.ZIndex = 1000001
+creditLabel.LayoutOrder = 3
+creditLabel.Parent = centerContainer
+
 local rotationConnection
 rotationConnection = RunService.RenderStepped:Connect(function(delta)
     if loadingIcon and loadingIcon.Parent then
@@ -143,9 +157,18 @@ for index, label in ipairs(letterLabels) do
     task.wait(0.1)
 end
 
+-- เล่น Animation จางขึ้นสำหรับ Credit Label
+TweenService:Create(creditLabel, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    TextTransparency = 0
+}):Play()
+
 task.wait(2.5) 
 
 TweenService:Create(loadingIcon, TweenInfo.new(0.8), {ImageTransparency = 1}):Play()
+TweenService:Create(creditLabel, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+    TextTransparency = 1
+}):Play()
+
 for index, label in ipairs(letterLabels) do
     TweenService:Create(label, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         TextTransparency = 1,
@@ -270,19 +293,22 @@ local function makeSmoothDraggable(frame)
     end)
 end
 
-local toggleGuiBtn = Instance.new("ImageButton")
+local toggleGuiBtn = Instance.new("TextButton")
 toggleGuiBtn.Name = "ToggleGuiButton"
 toggleGuiBtn.Parent = gui
 toggleGuiBtn.Position = UDim2.new(0, 15, 0, 60)
-toggleGuiBtn.Size = UDim2.new(0, 45, 0, 45)
+toggleGuiBtn.Size = UDim2.new(0, 120, 0, 32)
 toggleGuiBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-toggleGuiBtn.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=15286660621&width=420&height=420&format=png"
+toggleGuiBtn.Font = Enum.Font.SourceSansBold
+toggleGuiBtn.Text = "toggle ui"
+toggleGuiBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleGuiBtn.TextSize = 14
 toggleGuiBtn.Active = true
 toggleGuiBtn.Draggable = false
 makeSmoothDraggable(toggleGuiBtn)
 
 local toggleBtnCorner = Instance.new("UICorner")
-toggleBtnCorner.CornerRadius = UDim.new(0, 10)
+toggleBtnCorner.CornerRadius = UDim.new(0, 8)
 toggleBtnCorner.Parent = toggleGuiBtn
 
 local toggleBtnStroke = Instance.new("UIStroke")
@@ -321,14 +347,6 @@ toggleGuiBtn.MouseButton1Click:Connect(function()
             end
         end)
     end
-    
-    TweenService:Create(toggleGuiBtn, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 40, 0, 40)
-    }):Play()
-    task.wait(0.1)
-    TweenService:Create(toggleGuiBtn, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 45, 0, 45)
-    }):Play()
 end)
 
 local mainCorner = Instance.new("UICorner")
@@ -354,7 +372,7 @@ titleIcon.Parent = titleContainer
 titleIcon.Position = UDim2.new(0, 0, 0.5, -12)
 titleIcon.Size = UDim2.new(0, 24, 0, 24)
 titleIcon.BackgroundTransparency = 1
-titleIcon.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=15286660621&width=420&height=420&format=png"
+titleIcon.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=13747709484&width=420&height=420&format=png"
 titleIcon.ZIndex = 2
 
 local titleIconCorner = Instance.new("UICorner")
