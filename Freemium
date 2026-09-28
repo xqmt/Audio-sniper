@@ -6,11 +6,12 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local UserInputService = game:GetService("UserInputService")
 local ContentProvider = game:GetService("ContentProvider")
 local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "nebula.hit"
 gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true -- ทำให้ครอบคลุมเต็มจอมือถือทุกสัดส่วน
+gui.IgnoreGuiInset = true -- ครอบคลุมเต็มจอมือถือทุกสัดส่วน
 
 pcall(function() gui.Parent = CoreGui end)
 if not gui.Parent then
@@ -18,30 +19,64 @@ if not gui.Parent then
 end
 
 -- ================================================================================
--- LOADING SCREEN (FULLSCREEN DARK BG + BLUR 2.5 + TEXT ANIMATION)
+-- LOADING SCREEN (DARK BLACK BG + ROTATING GRADATION ICON + TEXT ANIMATION)
 -- ================================================================================
-local blur = Instance.new("BlurEffect")
-blur.Name = "NebulaBlur"
-blur.Size = 1
-blur.Parent = Lighting
-
 local loadingOverlay = Instance.new("Frame")
 loadingOverlay.Name = "LoadingOverlay"
 loadingOverlay.Size = UDim2.new(1, 0, 1, 0)
 loadingOverlay.Position = UDim2.new(0, 0, 0, 0)
-loadingOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-loadingOverlay.BackgroundTransparency = 1
+loadingOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- สีดำเข้มสนิท
+loadingOverlay.BackgroundTransparency = 0
 loadingOverlay.BorderSizePixel = 0
 loadingOverlay.ZIndex = 999999
 loadingOverlay.Parent = gui
 
+-- Container หลักสำหรับจัดวาง Icon และ Text ให้ตรงกลาง
+local centerContainer = Instance.new("Frame")
+centerContainer.Name = "CenterContainer"
+centerContainer.Size = UDim2.new(0, 600, 0, 200)
+centerContainer.Position = UDim2.new(0.5, -300, 0.5, -100)
+centerContainer.BackgroundTransparency = 1
+centerContainer.ZIndex = 1000000
+centerContainer.Parent = loadingOverlay
+
+local centerLayout = Instance.new("UIListLayout")
+centerLayout.FillDirection = Enum.FillDirection.Vertical
+centerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+centerLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+centerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+centerLayout.Padding = UDim.new(0, 15)
+centerLayout.Parent = centerContainer
+
+-- Rotating Icon
+local loadingIcon = Instance.new("ImageLabel")
+loadingIcon.Name = "LoadingIcon"
+loadingIcon.Size = UDim2.new(0, 100, 0, 100)
+loadingIcon.BackgroundTransparency = 1
+loadingIcon.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=15286660621&width=420&height=420&format=png"
+loadingIcon.ImageTransparency = 1
+loadingIcon.ZIndex = 1000001
+loadingIcon.LayoutOrder = 1
+loadingIcon.Parent = centerContainer
+
+-- UI Gradient (ดำ-แดง ไล่สีแนวนอน) สำหรับ Icon
+local iconGradient = Instance.new("UIGradient")
+iconGradient.Rotation = 0 -- แนวนอน
+iconGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),     -- สีดำ
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 0, 0)), -- สีแดง
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))      -- สีดำ
+})
+iconGradient.Parent = loadingIcon
+
+-- Text Container
 local textContainer = Instance.new("Frame")
 textContainer.Name = "TextContainer"
-textContainer.Size = UDim2.new(0, 600, 0, 90) -- ขยายขนาด Container ให้รองรับฟอนต์ใหญ่ขึ้น
-textContainer.Position = UDim2.new(0.5, -300, 0.5, -45)
+textContainer.Size = UDim2.new(1, 0, 0, 60)
 textContainer.BackgroundTransparency = 1
 textContainer.ZIndex = 1000000
-textContainer.Parent = loadingOverlay
+textContainer.LayoutOrder = 2
+textContainer.Parent = centerContainer
 
 local textLayout = Instance.new("UIListLayout")
 textLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -58,11 +93,11 @@ for i = 1, #titleText do
     local char = string.sub(titleText, i, i)
     local letterLabel = Instance.new("TextLabel")
     letterLabel.Name = "Char_" .. i
-    letterLabel.Size = UDim2.new(0, (char == "." and 20 or 44), 1, 0) -- ขยายความกว้างตัวอักษร
+    letterLabel.Size = UDim2.new(0, (char == "." and 20 or 44), 1, 0)
     letterLabel.BackgroundTransparency = 1
     letterLabel.Text = char
     letterLabel.Font = Enum.Font.SourceSansBold
-    letterLabel.TextSize = 56 -- ปรับขนาดตัวอักษรให้ใหญ่ขึ้น
+    letterLabel.TextSize = 56
     letterLabel.TextTransparency = 1
     letterLabel.ZIndex = 1000001
     
@@ -70,7 +105,7 @@ for i = 1, #titleText do
         if char == "." then
             letterLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
         else
-            letterLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
+            letterLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
         end
     else
         letterLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -80,24 +115,34 @@ for i = 1, #titleText do
     table.insert(letterLabels, letterLabel)
 end
 
--- Fade in background and blur (ปรับเวลาช้าลงนุ่มขึ้น)
-TweenService:Create(blur, TweenInfo.new(1.2), {Size = 2.5}):Play()
-TweenService:Create(loadingOverlay, TweenInfo.new(1.2), {BackgroundTransparency = 0.7}):Play() -- มืดจางๆ เห็นฉากหลัง
-task.wait(0.6)
+-- สคริปต์สั่งให้ Icon หมุนตลอดเวลา
+local rotationConnection
+rotationConnection = RunService.RenderStepped:Connect(function(delta)
+    if loadingIcon and loadingIcon.Parent then
+        loadingIcon.Rotation = (loadingIcon.Rotation + delta * 180) % 360
+    else
+        if rotationConnection then rotationConnection:Disconnect() end
+    end
+end)
 
--- Fade in letters one by one (ปรับความเร็วการแสดงตัวอักษรให้ช้าลง)
+-- Fade in Icon
+TweenService:Create(loadingIcon, TweenInfo.new(0.8), {ImageTransparency = 0}):Play()
+task.wait(0.4)
+
+-- Fade in letters one by one
 for index, label in ipairs(letterLabels) do
     label.Position = UDim2.new(0, 0, 0, 15)
     TweenService:Create(label, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         TextTransparency = 0,
         Position = UDim2.new(0, 0, 0, 0)
     }):Play()
-    task.wait(0.12)
+    task.wait(0.1)
 end
 
-task.wait(2.5) -- หน่วงเวลาให้อ่านข้อความสักครู่
+task.wait(2.5) -- หน่วงเวลาอ่านข้อความ
 
--- Fade out letters, overlay, and blur (ปรับเวลาเลือนหายให้ช้าลงนุ่มนวล)
+-- Fade out Icon, Letters และ Overlay
+TweenService:Create(loadingIcon, TweenInfo.new(0.8), {ImageTransparency = 1}):Play()
 for index, label in ipairs(letterLabels) do
     TweenService:Create(label, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         TextTransparency = 1,
@@ -105,12 +150,11 @@ for index, label in ipairs(letterLabels) do
     }):Play()
 end
 
-TweenService:Create(loadingOverlay, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
-TweenService:Create(blur, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = 0}):Play()
+TweenService:Create(loadingOverlay, TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
 
-task.wait(1.5)
+task.wait(1.0)
+if rotationConnection then rotationConnection:Disconnect() end
 loadingOverlay:Destroy()
-blur:Destroy()
 
 -- ================================================================================
 -- MAIN SCRIPT LOGIC
