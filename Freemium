@@ -1,4 +1,4 @@
--- [[ credit @fear
+-- [[ credit ginger.hit
 
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
@@ -167,37 +167,56 @@ textLayout.FillDirection = Enum.FillDirection.Horizontal
 textLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 textLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 textLayout.SortOrder = Enum.SortOrder.LayoutOrder
-textLayout.Padding = UDim.new(0, 4)
+textLayout.Padding = UDim.new(0, 0)
 textLayout.Parent = textContainer
 
-local titleText = "Nebula.hit"
+--------------------------------------------------------------------------------
+-- LOADING SCREEN NEBULA.HIT (MATCHED MAINFRAME STYLE & WAVE EFFECT)
+--------------------------------------------------------------------------------
+local titleText = "nebula.hit"
 local letterLabels = {}
 
 for i = 1, #titleText do
     local char = string.sub(titleText, i, i)
     local letterLabel = Instance.new("TextLabel")
     letterLabel.Name = "Char_" .. i
-    letterLabel.Size = UDim2.new(0, (char == "." and 20 or 44), 1, 0)
+    letterLabel.Size = UDim2.new(0, (char == "." and 18 or 32), 1, 0)
     letterLabel.BackgroundTransparency = 1
     letterLabel.Text = char
     letterLabel.Font = Enum.Font.SourceSansBold
     letterLabel.TextSize = 56
     letterLabel.TextTransparency = 1
     letterLabel.ZIndex = 1000001
-    
-    if char == "." or string.lower(char) == "h" or string.lower(char) == "i" or string.lower(char) == "t" then
-        if char == "." then
-            letterLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-        else
-            letterLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        end
-    else
-        letterLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    end
-    
     letterLabel.Parent = textContainer
-    table.insert(letterLabels, letterLabel)
+
+    table.insert(letterLabels, {
+        Label = letterLabel,
+        Char = char,
+        Index = i
+    })
 end
+
+-- Wave Color Animation สำหรับ Loading Screen
+local loadingWaveConn = RunService.RenderStepped:Connect(function()
+    local t = os.clock() * 4.5
+    for _, item in ipairs(letterLabels) do
+        local offset = item.Index * 0.35
+        local val = (math.sin(t - offset) + 1) / 2
+        
+        local charLower = string.lower(item.Char)
+        if charLower == "." or charLower == "h" or charLower == "i" or charLower == "t" then
+            item.Label.TextColor3 = Color3.fromRGB(
+                math.floor(160 + (255 - 160) * val),
+                math.floor(20 * (1 - val)),
+                math.floor(30 * (1 - val))
+            )
+        else
+            local brightness = math.floor(150 + (255 - 150) * val)
+            item.Label.TextColor3 = Color3.fromRGB(brightness, brightness, brightness)
+        end
+    end
+end)
+--------------------------------------------------------------------------------
 
 local creditLabel = Instance.new("TextLabel")
 creditLabel.Name = "CreditLabel"
@@ -224,13 +243,13 @@ end)
 TweenService:Create(loadingIcon, TweenInfo.new(0.8), {ImageTransparency = 0}):Play()
 task.wait(0.4)
 
-for index, label in ipairs(letterLabels) do
-    label.Position = UDim2.new(0, 0, 0, 15)
-    TweenService:Create(label, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+for index, item in ipairs(letterLabels) do
+    item.Label.Position = UDim2.new(0, 0, 0, 15)
+    TweenService:Create(item.Label, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         TextTransparency = 0,
         Position = UDim2.new(0, 0, 0, 0)
     }):Play()
-    task.wait(0.1)
+    task.wait(0.08)
 end
 
 TweenService:Create(creditLabel, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -244,8 +263,8 @@ TweenService:Create(creditLabel, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.
     TextTransparency = 1
 }):Play()
 
-for index, label in ipairs(letterLabels) do
-    TweenService:Create(label, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+for index, item in ipairs(letterLabels) do
+    TweenService:Create(item.Label, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         TextTransparency = 1,
         Position = UDim2.new(0, 0, 0, -15)
     }):Play()
@@ -256,6 +275,7 @@ TweenService:Create(bgDim, TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.Easing
 
 task.wait(1.0)
 if rotationConnection then rotationConnection:Disconnect() end
+if loadingWaveConn then loadingWaveConn:Disconnect() end
 loadingOverlay:Destroy()
 
 local IGNORED_IDS = { ["3"] = true }
@@ -467,18 +487,70 @@ titleFallback.TextSize = 12.5
 titleFallback.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleFallback.ZIndex = 1
 
-local title = Instance.new("TextLabel")
-title.Name = "Title"
-title.Parent = titleContainer
-title.Position = UDim2.new(0, 32, 0, 0)
-title.Size = UDim2.new(1, -32, 1, 0)
-title.BackgroundTransparency = 1
-title.Font = Enum.Font.SourceSansBold
-title.RichText = true
-title.Text = "nebula.<font color=\"rgb(255,0,0)\">hit</font>"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 16.5
-title.TextXAlignment = Enum.TextXAlignment.Left
+--------------------------------------------------------------------------------
+-- SKEET AMBIENT GLOW TEXT (NEBULA.HIT IN MAINFRAME)
+--------------------------------------------------------------------------------
+local mainTitleContainer = Instance.new("Frame")
+mainTitleContainer.Name = "SkeetTitleFrame"
+mainTitleContainer.Parent = titleContainer
+mainTitleContainer.Position = UDim2.new(0, 32, 0, 0)
+mainTitleContainer.Size = UDim2.new(1, -32, 1, 0)
+mainTitleContainer.BackgroundTransparency = 1
+
+local mainTitleLayout = Instance.new("UIListLayout")
+mainTitleLayout.FillDirection = Enum.FillDirection.Horizontal
+mainTitleLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+mainTitleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+mainTitleLayout.SortOrder = Enum.SortOrder.LayoutOrder
+mainTitleLayout.Padding = UDim.new(0, 0)
+mainTitleLayout.Parent = mainTitleContainer
+
+local mainTitleText = "nebula.hit"
+local mainLetters = {}
+
+for i = 1, #mainTitleText do
+    local char = string.sub(mainTitleText, i, i)
+    local letter = Instance.new("TextLabel")
+    letter.Name = "Letter_" .. i
+    letter.Parent = mainTitleContainer
+    letter.Size = UDim2.new(0, (char == "." and 5 or 9), 1, 0)
+    letter.BackgroundTransparency = 1
+    letter.Text = char
+    letter.Font = Enum.Font.SourceSansBold
+    letter.TextSize = 16.5
+    letter.TextXAlignment = Enum.TextXAlignment.Center
+    letter.LayoutOrder = i
+
+    table.insert(mainLetters, {
+        Label = letter,
+        Char = char,
+        Index = i
+    })
+end
+
+-- Skeet color wave animation connection
+RunService.RenderStepped:Connect(function()
+    local t = os.clock() * 4.5
+    for _, item in ipairs(mainLetters) do
+        local offset = item.Index * 0.35
+        local val = (math.sin(t - offset) + 1) / 2
+        
+        local charLower = string.lower(item.Char)
+        if charLower == "." or charLower == "h" or charLower == "i" or charLower == "t" then
+            -- Red neon fade for ".hit"
+            item.Label.TextColor3 = Color3.fromRGB(
+                math.floor(160 + (255 - 160) * val),
+                math.floor(20 * (1 - val)),
+                math.floor(30 * (1 - val))
+            )
+        else
+            -- White to smooth metallic grey for "nebula"
+            local brightness = math.floor(150 + (255 - 150) * val)
+            item.Label.TextColor3 = Color3.fromRGB(brightness, brightness, brightness)
+        end
+    end
+end)
+--------------------------------------------------------------------------------
 
 local searchFrame = Instance.new("Frame")
 searchFrame.Name = "SearchContainer"
@@ -660,27 +732,34 @@ local function createOrUpdateSongCard(player, soundId)
         creatorLabel.TextXAlignment = Enum.TextXAlignment.Left
         creatorLabel.TextTruncate = Enum.TextTruncate.AtEnd
 
-        local sliderBg = Instance.new("TextButton")
+        local sliderHitbox = Instance.new("TextButton")
+        sliderHitbox.Name = "SliderHitbox"
+        sliderHitbox.Parent = extraPanel
+        sliderHitbox.Position = UDim2.new(0, 12, 0, 21)
+        sliderHitbox.Size = UDim2.new(1, -24, 0, 20)
+        sliderHitbox.BackgroundTransparency = 1
+        sliderHitbox.Text = ""
+        sliderHitbox.AutoButtonColor = false
+
+        local sliderBg = Instance.new("Frame")
         sliderBg.Name = "SliderBg"
-        sliderBg.Parent = extraPanel
-        sliderBg.Position = UDim2.new(0, 12, 0, 28)
-        sliderBg.Size = UDim2.new(1, -24, 0, 6)
-        sliderBg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        sliderBg.Font = Enum.Font.SourceSansBold
-        sliderBg.TextSize = 12.5
-        sliderBg.AutoButtonColor = false
-        sliderBg.Text = ""
+        sliderBg.Parent = sliderHitbox
+        sliderBg.Position = UDim2.new(0, 0, 0.5, -3)
+        sliderBg.Size = UDim2.new(1, 0, 0, 6)
+        sliderBg.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+        sliderBg.BorderSizePixel = 0
 
         local sliderBgCorner = Instance.new("UICorner")
         sliderBgCorner.CornerRadius = UDim.new(1, 0)
         sliderBgCorner.Parent = sliderBg
 
         local sliderBgStroke = Instance.new("UIStroke")
-        sliderBgStroke.Color = Color3.fromRGB(14, 14, 14)
+        sliderBgStroke.Color = Color3.fromRGB(24, 24, 28)
         sliderBgStroke.Thickness = 1
         sliderBgStroke.Parent = sliderBg
 
         local sliderFill = Instance.new("Frame")
+        sliderFill.Name = "SliderFill"
         sliderFill.Parent = sliderBg
         sliderFill.Size = UDim2.new(0, 0, 1, 0)
         sliderFill.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
@@ -690,15 +769,28 @@ local function createOrUpdateSongCard(player, soundId)
         fillCorner.CornerRadius = UDim.new(1, 0)
         fillCorner.Parent = sliderFill
 
+        local sliderThumb = Instance.new("Frame")
+        sliderThumb.Name = "Thumb"
+        sliderThumb.Parent = sliderFill
+        sliderThumb.Position = UDim2.new(1, -5, 0.5, -5)
+        sliderThumb.Size = UDim2.new(0, 10, 0, 10)
+        sliderThumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        sliderThumb.BorderSizePixel = 0
+        sliderThumb.ZIndex = 3
+
+        local thumbCorner = Instance.new("UICorner")
+        thumbCorner.CornerRadius = UDim.new(1, 0)
+        thumbCorner.Parent = sliderThumb
+
         local durationLabel = Instance.new("TextLabel")
         durationLabel.Parent = extraPanel
-        durationLabel.Position = UDim2.new(0, 12, 0, 37)
-        durationLabel.Size = UDim2.new(1, -24, 0, 14)
+        durationLabel.Position = UDim2.new(0, 12, 0, 42)
+        durationLabel.Size = UDim2.new(1, -24, 0, 12)
         durationLabel.BackgroundTransparency = 1
         durationLabel.Font = Enum.Font.SourceSansBold
         durationLabel.Text = "0:00 / 0:00"
         durationLabel.TextColor3 = Color3.fromRGB(130, 130, 140)
-        durationLabel.TextSize = 12.5
+        durationLabel.TextSize = 11.5
         durationLabel.TextXAlignment = Enum.TextXAlignment.Right
 
         local previewBtn = Instance.new("TextButton")
@@ -813,48 +905,56 @@ local function createOrUpdateSongCard(player, soundId)
         end)
 
         local isDragging = false
+        local dragConnChanged, dragConnEnded
+
         local function updateSeek(input)
-            if not activePreviewSound or activePreviewSound ~= activePreviewSound then return end
-            local posX = math.clamp(input.Position.X - sliderBg.AbsolutePosition.X, 0, sliderBg.AbsoluteSize.X)
-            local percentage = posX / sliderBg.AbsoluteSize.X
-            if activePreviewSound.TimeLength > 0 then
-                activePreviewSound.TimePosition = percentage * activePreviewSound.TimeLength
-                TweenService:Create(sliderFill, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(percentage, 0, 1, 0)
-                }):Play()
-            end
+            if not activePreviewSound or activePreviewSound ~= activePreviewSound or activePreviewSound.TimeLength <= 0 then return end
+            
+            local absPos = sliderBg.AbsolutePosition.X
+            local absSize = sliderBg.AbsoluteSize.X
+            if absSize <= 0 then return end
+
+            local posX = math.clamp(input.Position.X - absPos, 0, absSize)
+            local percentage = posX / absSize
+
+            activePreviewSound.TimePosition = percentage * activePreviewSound.TimeLength
+            sliderFill.Size = UDim2.new(percentage, 0, 1, 0)
+            durationLabel.Text = formatTime(activePreviewSound.TimePosition) .. " / " .. formatTime(activePreviewSound.TimeLength)
         end
 
-        sliderBg.InputBegan:Connect(function(input)
+        sliderHitbox.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 isDragging = true
                 updateSeek(input)
-            end
-        end)
 
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                isDragging = false
-            end
-        end)
+                if dragConnChanged then dragConnChanged:Disconnect() end
+                if dragConnEnded then dragConnEnded:Disconnect() end
 
-        UserInputService.InputChanged:Connect(function(input)
-            if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                updateSeek(input)
+                dragConnChanged = UserInputService.InputChanged:Connect(function(moveInput)
+                    if isDragging and (moveInput.UserInputType == Enum.UserInputType.MouseMovement or moveInput.UserInputType == Enum.UserInputType.Touch) then
+                        updateSeek(moveInput)
+                    end
+                end)
+
+                dragConnEnded = UserInputService.InputEnded:Connect(function(endInput)
+                    if endInput.UserInputType == Enum.UserInputType.MouseButton1 or endInput.UserInputType == Enum.UserInputType.Touch then
+                        isDragging = false
+                        if dragConnChanged then dragConnChanged:Disconnect() end
+                        if dragConnEnded then dragConnEnded:Disconnect() end
+                    end
+                end)
             end
         end)
 
         task.spawn(function()
             while card.Parent do
-                task.wait(0.1)
+                task.wait(0.05)
                 if activePreviewSound and activePreviewBtn == previewBtn and not isDragging then
                     local length = activePreviewSound.TimeLength
                     local pos = activePreviewSound.TimePosition
                     if length > 0 then
                         local progress = math.clamp(pos / length, 0, 1)
-                        TweenService:Create(sliderFill, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
-                            Size = UDim2.new(progress, 0, 1, 0)
-                        }):Play()
+                        sliderFill.Size = UDim2.new(progress, 0, 1, 0)
                         durationLabel.Text = formatTime(pos) .. " / " .. formatTime(length)
                     end
                 end
